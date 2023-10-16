@@ -1,4 +1,4 @@
-const BookService = require('./books.service');
+const BooksService = require('./books.service');
 
 const fakeBooks = [
   {
@@ -7,29 +7,42 @@ const fakeBooks = [
   },
 ];
 
-const MongoLibStub = {
-  getAll: () => [...fakeBooks],
+const mockGetAll = jest.fn();
+
+jest.mock('../lib/mongo.lib', () => jest.fn().mockImplementation(() => ({
+  getAll: mockGetAll,
   create: () => {},
-}
+})));
 
-jest.mock('../lib/mongo.lib', () => jest.fn().mockImplementation(() => MongoLibStub));
-
-describe('Test Suito to BookService', () => {
+describe('Test for BooksService', () => {
   let service;
   beforeEach(() => {
-    service = new BookService();
-    // Best practics to clean mocks
+    service = new BooksService();
     jest.clearAllMocks();
   });
 
-  describe('Test to get all books', () => {
-    test('should return an array of books', async () => {
+  describe('test for getBooks', () => {
+    test('should return a list book', async () => {
       // Arrange
+      mockGetAll.mockResolvedValue(fakeBooks);
       // Act
       const books = await service.getBooks({});
       console.log(books);
       // Assert
       expect(books.length).toEqual(1);
+      expect(mockGetAll).toHaveBeenCalled();
+      expect(mockGetAll).toHaveBeenCalledTimes(1);
+      expect(mockGetAll).toHaveBeenCalledWith('books', {});
+    });
+
+    test('should return a list book', async () => {
+      mockGetAll.mockResolvedValue([{
+        _id: 1,
+        name: 'Harry putter 2',
+      }]);
+      const books = await service.getBooks({});
+      console.log(books);
+      expect(books[0].name).toEqual('Harry putter 2');
     });
   });
 });
